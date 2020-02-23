@@ -4,7 +4,8 @@
   "description": "creation d'une api pour un rojet test angular",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": " npm run lint & nodemon app.js",
+    "lint": " ./node_modules/.bin/eslint **/*.js"
   },
   "repository": {
     "type": "git",
@@ -20,7 +21,10 @@
   "author": "nesrine horrig",
   "license": "ISC",
   "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "eslint": "^6.8.0",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "mongoose": "^5.9.2"
   }
 }
