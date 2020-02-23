@@ -1,0 +1,22 @@
+{
+  "name": "server2020",
+  "version": "1.0.0",
+  "description": "creation d'une api pour un rojet test angular",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "MEAN-stack-project-2020"
+  },
+  "keywords": [
+    "angular",
+    "node",
+    "express",
+    "mongo",
+    "mean"
+  ],
+  "author": "nesrine horrig",
+  "license": "ISC"
+}
