@@ -1,6 +1,7 @@
 const express=require('express');
 const router=express.Router(); // pouvoir repondre  aux requetes  coté client  généralement  le navigateur
 const blogModel=require('./models/blog_post');
+const mongoose=require('mongoose')
 router.get('/ping', (req,res)=>{
      res.status(200).json({
          msg:"pong !",
@@ -69,4 +70,26 @@ router.delete('/block-posts/:id',(req,res)=>{
         })
     })*/
 })
+ router.delete('/block-posts',(req,res)=>{
+     
+     const ids=req.query.id$;
+     const allIds=ids.split(',').map(element=>{
+         if(element.match(/^[0-9a-fA-F]{24}$/)){// id mongoose 24 elements
+             return mongoose.Types.ObjectId(element)
+         }
+         else{
+             console.log (`le id : ${element}  n'est pas valide`)
+         }
+
+        })
+   const conditions ={_id :{$in: allIds}};
+   blogModel.deleteMany(conditions,(err,resultat)=>{
+       if(err)
+       { return res.status(500).json(err)}
+      
+       res.status(202).json(resultat)
+       
+
+   });
+});
 module.exports=router;
