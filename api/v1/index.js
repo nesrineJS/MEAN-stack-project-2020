@@ -1,7 +1,38 @@
 const express=require('express');
 const router=express.Router(); // pouvoir repondre  aux requetes  coté client  généralement  le navigateur
 const blogModel=require('./models/blog_post');
+const multer=require('multer'); //upload images
+const crypto=require('crypto'); //creation des fichiers
+const path=require('path'); // path des fichiers creees
 const mongoose=require('mongoose')
+
+
+
+// file upload configuration 
+const storageFile=multer.diskStorage({
+    destination:'./upload/',
+    filename:function(req,file,callBack){
+        crypto.pseudoRandomBytes(16,function(err,raw){
+            if(err) return callBack(err);
+            lastUploadedImage=raw.toString('hex')+path.extname(file.originalname)
+            console.log('lastUploadedImage',+lastUploadedImage)
+            callBack(null,lastUploadedImage)
+        });
+
+    }
+});
+const Upload=multer({storage:storageFile});
+ router.post('/block-posts/upload',Upload.single('image'),(req,res)=>{
+     if(! req.file.originalname.match(/\.(jpg|png|gif|jpeg)$/)){
+         return  res.status(400).json({
+             messag:'file  error'
+         })
+     }
+     res.status(201).send({
+         file:req.file
+     })
+ }
+ )
 router.get('/ping', (req,res)=>{
      res.status(200).json({
          msg:"pong !",
@@ -20,9 +51,12 @@ router.get('/block-posts', (req,res)=>{
     
     
 });
+let lastUploadedImage='';
 router.post('/block-posts',(req,res)=>{
+     //const Bloc=new blogModel(req.body);
+     const Bloc=new blogModel({...req.body,image:lastUploadedImage});
      console.log(req.body)
-     const Bloc=new blogModel(req.body);
+
      Bloc.save((err,Bloc)=>{
 if(err){
     res.status(500).json(err)
