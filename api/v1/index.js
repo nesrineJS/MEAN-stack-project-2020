@@ -1,10 +1,12 @@
 const express=require('express');
 const router=express.Router(); // pouvoir repondre  aux requetes  coté client  généralement  le navigateur
 const blogModel=require('./models/blog_post');
+
 const multer=require('multer'); //upload images
 const crypto=require('crypto'); //creation des fichiers
 const path=require('path'); // path des fichiers creees
-const mongoose=require('mongoose')
+const mongoose=require('mongoose');
+const resize=require('../../utils/resize');
 
 
 
@@ -53,18 +55,52 @@ router.get('/block-posts', (req,res)=>{
 });
 let lastUploadedImage='';
 router.post('/block-posts',(req,res)=>{
-     //const Bloc=new blogModel(req.body);
-     const Bloc=new blogModel({...req.body,image:lastUploadedImage});
-     console.log(req.body)
-
+ 
+    const smallImagePath=`./upload/${lastUploadedImage}`;
+    const outputName=`./upload/small-${smallImagePath}`;
+    resize({path:smallImagePath, width:200,height:200,outputName:outputName})
+    .then(data=>{
+        console.log('ok resize',data.size)
+    })
+    .catch(err=>console.error('error from size',err));
+    const Bloc=new blogModel({
+        ...req.body,
+        image:lastUploadedImage,
+         smallImage:`small-${lastUploadedImage}`
+        });
      Bloc.save((err,Bloc)=>{
 if(err){
-    res.status(500).json(err)
+    return  res.status(500).json(err)
 } 
 res.status(201).json(Bloc)
 
      });
  })
+ router.put('/block-posts/update/:id', Upload.single('image'),(req,res)=>{
+      const blocId=req.params.id;
+      const condtions={_id:blocId};
+      const blogPost= {...req.body,image:lastUploadedImage};
+      const update={$set:blogPost};
+       const options={
+           upsert:true,//insert and update
+           new:true //retourner le document modifié et pas le document avant modification
+       };
+      blogModel.findOneAndUpdate(condtions,update,options,(err,response)=>{
+        if(err){
+            return res.status(500).json({
+                msg:' update failed',
+                error: err
+            })
+        }
+        res.status(202).json({
+            message:`this object with this id:${blocId}is updated`,
+             response:response
+           // blogs:[blogModel.find()]
+        })
+          })
+        })
+   
+
  router.get('/block-posts/:id',(req,res)=>{
    
     const id=req.params.id;
@@ -80,7 +116,9 @@ res.status(201).json(Bloc)
     })
 })
 router.delete('/block-posts/:id',(req,res)=>{
-   
+   if(!req.isAuthenticated){
+       return res.status(401).json({msq:'not authorized'});
+   }
     const id=req.params.id;
     blogModel.findByIdAndDelete(id,(err,blog)=>{
   if(err){
@@ -105,7 +143,9 @@ router.delete('/block-posts/:id',(req,res)=>{
     })*/
 })
  router.delete('/block-posts',(req,res)=>{
-     
+    if(!req.isAuthenticated){
+        return res.status(401).json({msq:'not authorized'});
+    }
      const ids=req.query.id$;
      const allIds=ids.split(',').map(element=>{
          if(element.match(/^[0-9a-fA-F]{24}$/)){// id mongoose 24 elements
@@ -126,4 +166,15 @@ router.delete('/block-posts/:id',(req,res)=>{
 
    });
 });
+ router.get('/block-posts/edit/:id',(req,res)=>{
+ const id=req.param.id
+  blogModel.findById(id,(blog,err)=>{
+      if(err){
+          res.status(310).json({
+              msg: 'not found'
+          })
+      
+      console.log(res.body)
+  }})
+ })
 module.exports=router;
